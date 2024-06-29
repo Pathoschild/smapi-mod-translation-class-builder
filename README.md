@@ -85,7 +85,6 @@ Main options:
 
 argument         | description | default value
 ---------------- | ----------- | ------------
-`AddGetByKey`    | Whether to add a method to fetch a translation by its key, like `I18n.GetByKey("ready-now")` | `false`
 `AddKeyMap`      | Whether to add a nested static class to access translation keys like `I18n.Keys.ReadyNow`. | `false`
 `ClassName`      | The name of the generated class. | `I18n`
 `Namespace`      | The namespace for the generated class. | _project's root namespace_

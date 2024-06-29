@@ -29,7 +29,6 @@ namespace Pathoschild.Stardew.ModTranslationClassBuilder
                 string @namespace = this.ReadOption(context, "Namespace", raw => raw) ?? this.GetRootNamespace(context) ?? "Pathoschild.I18n";
                 string className = this.ReadOption(context, "ClassName", raw => raw) ?? "I18n";
                 string classModifiers = this.ReadOption(context, "ClassModifiers", raw => raw) ?? "internal static";
-                bool addGetByKey = this.ReadOption<bool?>(context, "AddGetByKey", raw => bool.Parse(raw)) ?? false;
                 bool addKeyMap = this.ReadOption<bool?>(context, "AddKeyMap", raw => bool.Parse(raw)) ?? false;
 
                 // get translations
@@ -152,38 +151,21 @@ namespace Pathoschild.Stardew.ModTranslationClassBuilder
                     }
                 }
 
-                if (addGetByKey)
-                    output.AppendLine();
-                else
-                {
-                    output.AppendLine(
-                        $$"""
-
-
-                                /*********
-                                ** Private methods
-                                *********/
-                        """
-                    );
-                }
-
+                TranslationEntry? exampleMethod = entries.FirstOrDefault(p => p.Tokens.Length == 0) ?? entries.FirstOrDefault();
                 output.AppendLine(
                     $$"""
+
                             /// <summary>Get a translation by its key.</summary>
                             /// <param name="key">The translation key.</param>
                             /// <param name="tokens">An object containing token key/value pairs. This can be an anonymous object (like <c>new { value = 42, name = "Cranberries" }</c>), a dictionary, or a class instance.</param>
-                            {{(addGetByKey ? "public" : "private")}} static Translation GetByKey(string key, object? tokens = null)
+                            /// <remarks>You should usually use a strongly-typed method like <see cref="{{exampleMethod?.MethodName}}" /> instead.</remarks>
+                            public static Translation GetByKey(string key, object? tokens = null)
                             {
                                 if ({{className}}.Translations == null)
                                     throw new InvalidOperationException($"You must call {nameof({{className}})}.{nameof({{className}}.Init)} from the mod's entry method before reading translations.");
 
                                 return {{className}}.Translations.Get(key, tokens);
                             }
-                    """
-                );
-
-                output.AppendLine(
-                    """
                         }
                     }
 

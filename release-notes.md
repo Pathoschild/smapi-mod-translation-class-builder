@@ -1,6 +1,9 @@
 ← [README](README.md)
 
 # Release notes
+## Upcoming version
+* The `I18n.GetByKey` method is now available by default.
+
 ## 2.0.1
 Released 08 May 2022.
 
