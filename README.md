@@ -11,12 +11,9 @@ from your [SMAPI](https://smapi.io/) mod code.
 * [See also](#see-also)
 
 ## Why does this exist?
-<dl>
-<dt>Without the package:</dt>
-<dd>
-
+### Without the package
 Mods use code like this to read their translations:
-```c#
+```cs
 string text = helper.Translation.Get("range-value", new { min = 1, max = 5 });
 ```
 
@@ -28,12 +25,10 @@ That also means that after changing the translation files, you need to manually 
 anywhere that referenced the translations to update them. That gets pretty tedious with larger
 mods, which might have hundreds of translations used across dozens of files.
 
-</dd>
-<dt>With the package:</dt>
-<dd>
+### With the package
 
 This package lets you write code like this instead:
-```c#
+```cs
 string text = I18n.RangeValue(min: 1, max: 5);
 ```
 
@@ -41,16 +36,13 @@ Since it's strongly typed, it's validated immediately as you type. For example, 
 typed `I18n.RangeValues` instead, you'll see an immediate error that `RangeValues` doesn't exist
 without needing to test it in-game (or even compile the mod).
 
-</dd>
-</dl>
-
 See the [test mod](TestMod) for an example of the generated class in an actual mod.
 
 ## Usage
 ### First-time setup
 1. [Install the NuGet package](https://www.nuget.org/packages/Pathoschild.Stardew.ModTranslationClassBuilder).
 2. In your mod's `Entry` method, add this line:
-   ```c#
+   ```cs
    I18n.Init(helper.Translation);
    ```
 

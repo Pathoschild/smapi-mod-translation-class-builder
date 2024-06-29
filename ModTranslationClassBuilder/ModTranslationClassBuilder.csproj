@@ -6,6 +6,7 @@
     <Version>2.0.1</Version>
     <Authors>Pathoschild</Authors>
     <Description>Autogenerate a strongly-typed class to access i18n translation files from your SMAPI mod code.</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageIcon>images/package-icon.png</PackageIcon>
     <PackageProjectUrl>https://github.com/Pathoschild/SMAPI-ModTranslationClassBuilder#readme</PackageProjectUrl>
@@ -47,6 +48,7 @@
 
   <!-- package structure -->
   <ItemGroup>
+    <None Include="..\README.md" Pack="true" PackagePath="\"/>
     <None PackagePath="analyzers/dotnet/cs" Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" Visible="false" />
     <None PackagePath="analyzers/dotnet/cs" Include="$(OutputPath)\Newtonsoft.Json.dll" Pack="true" Visible="false" />
     <None PackagePath="build/Pathoschild.Stardew.ModTranslationClassBuilder.targets" Include="assets\package.targets" Pack="true" />
