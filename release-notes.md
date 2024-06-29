@@ -1,7 +1,9 @@
 ← [README](README.md)
 
 # Release notes
-## Upcoming version
+## 2.1.0
+Released 29 June 2024.
+
 * The `I18n.GetByKey` method and `I18n.Keys` constants are now available by default.
 * Fixed error in rare cases when an `i18n/default.json` file is invalid.
 
