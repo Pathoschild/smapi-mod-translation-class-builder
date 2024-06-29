@@ -29,84 +29,84 @@ namespace Pathoschild.Stardew.ModTranslationClassBuilder
                 string @namespace = this.ReadOption(context, "Namespace", raw => raw) ?? this.GetRootNamespace(context) ?? "Pathoschild.I18n";
                 string className = this.ReadOption(context, "ClassName", raw => raw) ?? "I18n";
                 string classModifiers = this.ReadOption(context, "ClassModifiers", raw => raw) ?? "internal static";
-                bool addGetByKey = this.ReadOption<bool?>(context, "AddGetByKey", raw => bool.Parse(raw)) ?? false;
-                bool addKeyMap = this.ReadOption<bool?>(context, "AddKeyMap", raw => bool.Parse(raw)) ?? false;
 
                 // get translations
-                TranslationEntry[] entries = this.ReadTranslationFile(context, new HashSet<string>(this.GetReservedNames(className, addKeyMap)));
+                TranslationEntry[] entries = this.ReadTranslationFile(context, new HashSet<string>(this.GetReservedNames(className)));
 
                 // build output
                 StringBuilder output = new();
-                output
-                    .AppendLine("#nullable enable")
-                    .AppendLine("using System;")
-                    .AppendLine("using System.CodeDom.Compiler;");
+                output.AppendLine(
+                    """
+                    #nullable enable
+                    using System;
+                    using System.CodeDom.Compiler;
+                    """
+                );
 
                 if (entries.Any(p => p.TokenParameterStyle == TokenParameterStyle.Dictionary))
-                {
-                    output
-                        .AppendLine("using System.Collections.Generic;");
-                }
+                    output.AppendLine("using System.Collections.Generic;");
 
-                output
-                    .AppendLine("using System.Diagnostics.CodeAnalysis;")
-                    .AppendLine("using StardewModdingAPI;")
-                    .AppendLine()
-                    .AppendLine($"namespace {@namespace}")
-                    .AppendLine("{")
-                    .AppendLine("    /// <summary>Get translations from the mod's <c>i18n</c> folder.</summary>")
-                    .AppendLine("    /// <remarks>This is auto-generated from the <c>i18n/default.json</c> file when the project is compiled.</remarks>")
-                    .AppendLine(@"    [GeneratedCode(""TextTemplatingFileGenerator"", ""1.0.0"")]")
-                    .AppendLine(@"    [SuppressMessage(""ReSharper"", ""InconsistentNaming"", Justification = ""Deliberately named for consistency and to match translation conventions."")]")
-                    .AppendLine($"    {classModifiers} class {className}")
-                    .AppendLine("    {")
-                    .AppendLine("        /*********")
-                    .AppendLine("        ** Fields")
-                    .AppendLine("        *********/")
-                    .AppendLine("        /// <summary>The mod's translation helper.</summary>")
-                    .AppendLine("        private static ITranslationHelper? Translations;")
-                    .AppendLine()
-                    .AppendLine();
+                output.AppendLine(
+                    $$"""
+                    using System.Diagnostics.CodeAnalysis;
+                    using StardewModdingAPI;
 
-                if (addKeyMap)
-                {
-                    output
-                        .AppendLine("        /*********")
-                        .AppendLine("        ** Accessors")
-                        .AppendLine("        *********/")
-                        .AppendLine("        /// <summary>A lookup of available translation keys.</summary>")
-                        .AppendLine(@"        [SuppressMessage(""ReSharper"", ""MemberHidesStaticFromOuterClass"", Justification = ""Using the same key is deliberate."")]")
-                        .AppendLine("        public static class Keys")
-                        .AppendLine("        {");
-
-                    for (int i = 0; i < entries.Length; i++)
+                    namespace {{@namespace}}
                     {
-                        TranslationEntry entry = entries[i];
+                        /// <summary>Get translations from the mod's <c>i18n</c> folder.</summary>
+                        /// <remarks>This is auto-generated from the <c>i18n/default.json</c> file when the project is compiled.</remarks>
+                        [GeneratedCode("TextTemplatingFileGenerator", "1.0.0")]
+                        [SuppressMessage("ReSharper", "InconsistentNaming", Justification = "Deliberately named for consistency and to match translation conventions.")]
+                        {{classModifiers}} class {{className}}
+                        {
+                            /*********
+                            ** Fields
+                            *********/
+                            /// <summary>The mod's translation helper.</summary>
+                            private static ITranslationHelper? Translations;
 
-                        if (i != 0)
-                            output.AppendLine();
 
-                        output
-                            .AppendLine($@"            /// <summary>The unique key for a translation equivalent to ""{entry.GetTranslationTextForXmlDoc()}"".</summary>")
-                            .AppendLine($@"            public const string {entry.MethodName} = ""{entry.Key}"";");
-                    }
+                            /*********
+                            ** Accessors
+                            *********/
+                            /// <summary>A lookup of available translation keys.</summary>
+                            [SuppressMessage("ReSharper", "MemberHidesStaticFromOuterClass", Justification = "Using the same key is deliberate.")]
+                            public static class Keys
+                            {
+                    """
+                );
 
-                    output
-                        .AppendLine("        }")
-                        .AppendLine()
-                        .AppendLine();
+                for (int i = 0; i < entries.Length; i++)
+                {
+                    TranslationEntry entry = entries[i];
+
+                    if (i != 0)
+                        output.AppendLine();
+
+                    output.AppendLine(
+                        $$"""
+                                    /// <summary>The unique key for a translation equivalent to "{{entry.GetTranslationTextForXmlDoc()}}".</summary>
+                                    public const string {{entry.MethodName}} = "{{entry.Key}}";
+                          """
+                    );
                 }
 
-                output
-                    .AppendLine("        /*********")
-                    .AppendLine("        ** Public methods")
-                    .AppendLine("        *********/")
-                    .AppendLine("        /// <summary>Construct an instance.</summary>")
-                    .AppendLine(@"        /// <param name=""translations"">The mod's translation helper.</param>")
-                    .AppendLine("        public static void Init(ITranslationHelper translations)")
-                    .AppendLine("        {")
-                    .AppendLine($"            {className}.Translations = translations;")
-                    .AppendLine("        }");
+                output.AppendLine(
+                    $$"""
+                            }
+
+
+                            /*********
+                            ** Public methods
+                            *********/
+                            /// <summary>Construct an instance.</summary>
+                            /// <param name="translations">The mod's translation helper.</param>
+                            public static void Init(ITranslationHelper translations)
+                            {
+                                {{className}}.Translations = translations;
+                            }
+                    """
+                );
 
                 foreach (TranslationEntry entry in entries)
                 {
@@ -121,45 +121,41 @@ namespace Pathoschild.Stardew.ModTranslationClassBuilder
 
                     // method
                     {
-                        string renderedKey = addKeyMap ? $"Keys.{entry.MethodName}" : $@"""{entry.Key}""";
                         string renderedArgs = string.Join(", ", entry.Tokens.Select(token => $"object? {token.ParameterName}"));
                         string renderedTokenObj = entry.Tokens.Any() ? $", {this.GenerateTokenParameter(entry)}" : "";
 
                         output
-                            .AppendLine($@"        public static string {entry.MethodName}({renderedArgs})")
-                            .AppendLine("        {")
-                            .AppendLine($@"            return {className}.GetByKey({renderedKey}{renderedTokenObj});")
-                            .AppendLine("        }");
+                            .AppendLine(
+                                $$"""
+                                        public static string {{entry.MethodName}}({{renderedArgs}})
+                                        {
+                                            return {{className}}.GetByKey(Keys.{{entry.MethodName}}{{renderedTokenObj}});
+                                        }
+                                """
+                            );
                     }
                 }
 
-                if (addGetByKey)
-                    output.AppendLine();
-                else
-                {
-                    output
-                        .AppendLine()
-                        .AppendLine()
-                        .AppendLine("        /*********")
-                        .AppendLine("        ** Private methods")
-                        .AppendLine("        *********/");
-                }
+                TranslationEntry? exampleMethod = entries.FirstOrDefault(p => p.Tokens.Length == 0) ?? entries.FirstOrDefault();
+                output.AppendLine(
+                    $$"""
 
-                output
-                    .AppendLine("        /// <summary>Get a translation by its key.</summary>")
-                    .AppendLine(@"        /// <param name=""key"">The translation key.</param>")
-                    .AppendLine(@"        /// <param name=""tokens"">An object containing token key/value pairs. This can be an anonymous object (like <c>new { value = 42, name = ""Cranberries"" }</c>), a dictionary, or a class instance.</param>")
-                    .AppendLine($"        {(addGetByKey ? "public" : "private")} static Translation GetByKey(string key, object? tokens = null)")
-                    .AppendLine("        {")
-                    .AppendLine($"            if ({className}.Translations == null)")
-                    .AppendLine($@"                throw new InvalidOperationException($""You must call {{nameof({className})}}.{{nameof({className}.Init)}} from the mod's entry method before reading translations."");")
-                    .AppendLine($"            return {className}.Translations.Get(key, tokens);")
-                    .AppendLine("        }");
+                            /// <summary>Get a translation by its key.</summary>
+                            /// <param name="key">The translation key.</param>
+                            /// <param name="tokens">An object containing token key/value pairs. This can be an anonymous object (like <c>new { value = 42, name = "Cranberries" }</c>), a dictionary, or a class instance.</param>
+                            /// <remarks>You should usually use a strongly-typed method like <see cref="{{exampleMethod?.MethodName}}" /> instead.</remarks>
+                            public static Translation GetByKey(string key, object? tokens = null)
+                            {
+                                if ({{className}}.Translations == null)
+                                    throw new InvalidOperationException($"You must call {nameof({{className}})}.{nameof({{className}}.Init)} from the mod's entry method before reading translations.");
 
-                output
-                    .AppendLine("    }")
-                    .AppendLine("}")
-                    .AppendLine();
+                                return {{className}}.Translations.Get(key, tokens);
+                            }
+                        }
+                    }
+
+                    """
+                );
 
                 // Add the source code to the compilation
                 context.AddSource($"{className}.generated.cs", output.ToString());
@@ -176,15 +172,16 @@ namespace Pathoschild.Stardew.ModTranslationClassBuilder
         *********/
         /// <summary>Get the names which can't be used by a translation key.</summary>
         /// <param name="className">The name of the class to generate.</param>
-        /// <param name="addKeyMap">Whether to add a static class to get constant translation keys.</param>
-        private IEnumerable<string> GetReservedNames(string className, bool addKeyMap)
+        private string[] GetReservedNames(string className)
         {
-            yield return className;
-            yield return "Init";
-            yield return "Translations";
-            yield return "GetByKey";
-            if (addKeyMap)
-                yield return "Keys";
+            return new[]
+            {
+                className,
+                "Init",
+                "Translations",
+                "GetByKey",
+                "Keys"
+            };
         }
 
         /// <summary>Read the translation entries from the context.</summary>
@@ -200,7 +197,7 @@ namespace Pathoschild.Stardew.ModTranslationClassBuilder
 
                 // read file
                 string json = File.ReadAllText(file.Path);
-                var rawEntries = JsonConvert.DeserializeObject<Dictionary<string, string>>(json);
+                var rawEntries = JsonConvert.DeserializeObject<Dictionary<string, string>>(json) ?? new Dictionary<string, string>();
 
                 // parse entries
                 TranslationEntry[] entries = rawEntries

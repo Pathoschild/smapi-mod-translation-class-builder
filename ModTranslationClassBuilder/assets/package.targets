@@ -2,7 +2,6 @@
     <!-- make build properties available to source generators -->
     <ItemGroup>
         <CompilerVisibleProperty Include="RootNamespace" />
-        <CompilerVisibleProperty Include="TranslationClassBuilder_AddGetByKey" />
         <CompilerVisibleProperty Include="TranslationClassBuilder_AddKeyMap" />
         <CompilerVisibleProperty Include="TranslationClassBuilder_ClassModifiers" />
         <CompilerVisibleProperty Include="TranslationClassBuilder_ClassName" />

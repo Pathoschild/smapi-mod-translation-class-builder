@@ -3,15 +3,16 @@
     <!--NuGet package-->
     <PackageId>Pathoschild.Stardew.ModTranslationClassBuilder</PackageId>
     <Title>SMAPI mod translation class builder</Title>
-    <Version>2.0.1</Version>
+    <Version>2.1.0</Version>
     <Authors>Pathoschild</Authors>
-    <Description>Autogenerate a strongly-typed class to access i18n translation files from your SMAPI mod code.</Description>
+    <Description>Access your SMAPI mod translation files in a strongly-typed way.</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageIcon>images/package-icon.png</PackageIcon>
     <PackageProjectUrl>https://github.com/Pathoschild/SMAPI-ModTranslationClassBuilder#readme</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Pathoschild/SMAPI-ModTranslationClassBuilder.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageTags>smapi;stardew;valley</PackageTags>
+    <PackageTags>smapi;stardew;valley;i18n</PackageTags>
 
     <!--build-->
     <AssemblyName>Pathoschild.Stardew.ModTranslationClassBuilder</AssemblyName>
@@ -32,7 +33,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.3" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers; buildtransitive" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.0.1" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" GeneratePathProperty="true" PrivateAssets="all" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" GeneratePathProperty="true" PrivateAssets="all" />
   </ItemGroup>
 
   <!-- undocumented hack to fix NuGet dependencies in source generators: https://github.com/dotnet/roslyn/discussions/47517 -->
@@ -47,6 +48,7 @@
 
   <!-- package structure -->
   <ItemGroup>
+    <None Include="..\README.md" Pack="true" PackagePath="\"/>
     <None PackagePath="analyzers/dotnet/cs" Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" Visible="false" />
     <None PackagePath="analyzers/dotnet/cs" Include="$(OutputPath)\Newtonsoft.Json.dll" Pack="true" Visible="false" />
     <None PackagePath="build/Pathoschild.Stardew.ModTranslationClassBuilder.targets" Include="assets\package.targets" Pack="true" />
