@@ -29,10 +29,9 @@ namespace Pathoschild.Stardew.ModTranslationClassBuilder
                 string @namespace = this.ReadOption(context, "Namespace", raw => raw) ?? this.GetRootNamespace(context) ?? "Pathoschild.I18n";
                 string className = this.ReadOption(context, "ClassName", raw => raw) ?? "I18n";
                 string classModifiers = this.ReadOption(context, "ClassModifiers", raw => raw) ?? "internal static";
-                bool addKeyMap = this.ReadOption<bool?>(context, "AddKeyMap", raw => bool.Parse(raw)) ?? false;
 
                 // get translations
-                TranslationEntry[] entries = this.ReadTranslationFile(context, new HashSet<string>(this.GetReservedNames(className, addKeyMap)));
+                TranslationEntry[] entries = this.ReadTranslationFile(context, new HashSet<string>(this.GetReservedNames(className)));
 
                 // build output
                 StringBuilder output = new();
@@ -67,49 +66,36 @@ namespace Pathoschild.Stardew.ModTranslationClassBuilder
                             private static ITranslationHelper? Translations;
 
 
+                            /*********
+                            ** Accessors
+                            *********/
+                            /// <summary>A lookup of available translation keys.</summary>
+                            [SuppressMessage("ReSharper", "MemberHidesStaticFromOuterClass", Justification = "Using the same key is deliberate.")]
+                            public static class Keys
+                            {
                     """
                 );
 
-                if (addKeyMap)
+                for (int i = 0; i < entries.Length; i++)
                 {
-                    output.AppendLine(
-                        """
-                                /*********
-                                ** Accessors
-                                *********/
-                                /// <summary>A lookup of available translation keys.</summary>
-                                [SuppressMessage("ReSharper", "MemberHidesStaticFromOuterClass", Justification = "Using the same key is deliberate.")]
-                                public static class Keys
-                                {
-                        """
-                    );
+                    TranslationEntry entry = entries[i];
 
-                    for (int i = 0; i < entries.Length; i++)
-                    {
-                        TranslationEntry entry = entries[i];
-
-                        if (i != 0)
-                            output.AppendLine();
-
-                        output.AppendLine(
-                            $$"""
-                                        /// <summary>The unique key for a translation equivalent to "{{entry.GetTranslationTextForXmlDoc()}}".</summary>
-                                        public const string {{entry.MethodName}} = "{{entry.Key}}";
-                              """
-                        );
-                    }
+                    if (i != 0)
+                        output.AppendLine();
 
                     output.AppendLine(
-                        """
-                                }
-
-
-                        """
+                        $$"""
+                                    /// <summary>The unique key for a translation equivalent to "{{entry.GetTranslationTextForXmlDoc()}}".</summary>
+                                    public const string {{entry.MethodName}} = "{{entry.Key}}";
+                          """
                     );
                 }
 
                 output.AppendLine(
                     $$"""
+                            }
+
+
                             /*********
                             ** Public methods
                             *********/
@@ -135,7 +121,6 @@ namespace Pathoschild.Stardew.ModTranslationClassBuilder
 
                     // method
                     {
-                        string renderedKey = addKeyMap ? $"Keys.{entry.MethodName}" : $@"""{entry.Key}""";
                         string renderedArgs = string.Join(", ", entry.Tokens.Select(token => $"object? {token.ParameterName}"));
                         string renderedTokenObj = entry.Tokens.Any() ? $", {this.GenerateTokenParameter(entry)}" : "";
 
@@ -144,7 +129,7 @@ namespace Pathoschild.Stardew.ModTranslationClassBuilder
                                 $$"""
                                         public static string {{entry.MethodName}}({{renderedArgs}})
                                         {
-                                            return {{className}}.GetByKey({{renderedKey}}{{renderedTokenObj}});
+                                            return {{className}}.GetByKey(Keys.{{entry.MethodName}}{{renderedTokenObj}});
                                         }
                                 """
                             );
@@ -187,15 +172,16 @@ namespace Pathoschild.Stardew.ModTranslationClassBuilder
         *********/
         /// <summary>Get the names which can't be used by a translation key.</summary>
         /// <param name="className">The name of the class to generate.</param>
-        /// <param name="addKeyMap">Whether to add a static class to get constant translation keys.</param>
-        private IEnumerable<string> GetReservedNames(string className, bool addKeyMap)
+        private string[] GetReservedNames(string className)
         {
-            yield return className;
-            yield return "Init";
-            yield return "Translations";
-            yield return "GetByKey";
-            if (addKeyMap)
-                yield return "Keys";
+            return new[]
+            {
+                className,
+                "Init",
+                "Translations",
+                "GetByKey",
+                "Keys"
+            };
         }
 
         /// <summary>Read the translation entries from the context.</summary>

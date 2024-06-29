@@ -85,7 +85,6 @@ Main options:
 
 argument         | description | default value
 ---------------- | ----------- | ------------
-`AddKeyMap`      | Whether to add a nested static class to access translation keys like `I18n.Keys.ReadyNow`. | `false`
 `ClassName`      | The name of the generated class. | `I18n`
 `Namespace`      | The namespace for the generated class. | _project's root namespace_
 
