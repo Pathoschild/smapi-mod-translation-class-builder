@@ -37,47 +37,53 @@ namespace Pathoschild.Stardew.ModTranslationClassBuilder
 
                 // build output
                 StringBuilder output = new();
-                output
-                    .AppendLine("#nullable enable")
-                    .AppendLine("using System;")
-                    .AppendLine("using System.CodeDom.Compiler;");
+                output.AppendLine(
+                    """
+                    #nullable enable
+                    using System;
+                    using System.CodeDom.Compiler;
+                    """
+                );
 
                 if (entries.Any(p => p.TokenParameterStyle == TokenParameterStyle.Dictionary))
-                {
-                    output
-                        .AppendLine("using System.Collections.Generic;");
-                }
+                    output.AppendLine("using System.Collections.Generic;");
 
-                output
-                    .AppendLine("using System.Diagnostics.CodeAnalysis;")
-                    .AppendLine("using StardewModdingAPI;")
-                    .AppendLine()
-                    .AppendLine($"namespace {@namespace}")
-                    .AppendLine("{")
-                    .AppendLine("    /// <summary>Get translations from the mod's <c>i18n</c> folder.</summary>")
-                    .AppendLine("    /// <remarks>This is auto-generated from the <c>i18n/default.json</c> file when the project is compiled.</remarks>")
-                    .AppendLine(@"    [GeneratedCode(""TextTemplatingFileGenerator"", ""1.0.0"")]")
-                    .AppendLine(@"    [SuppressMessage(""ReSharper"", ""InconsistentNaming"", Justification = ""Deliberately named for consistency and to match translation conventions."")]")
-                    .AppendLine($"    {classModifiers} class {className}")
-                    .AppendLine("    {")
-                    .AppendLine("        /*********")
-                    .AppendLine("        ** Fields")
-                    .AppendLine("        *********/")
-                    .AppendLine("        /// <summary>The mod's translation helper.</summary>")
-                    .AppendLine("        private static ITranslationHelper? Translations;")
-                    .AppendLine()
-                    .AppendLine();
+                output.AppendLine(
+                    $$"""
+                    using System.Diagnostics.CodeAnalysis;
+                    using StardewModdingAPI;
+
+                    namespace {{@namespace}}
+                    {
+                        /// <summary>Get translations from the mod's <c>i18n</c> folder.</summary>
+                        /// <remarks>This is auto-generated from the <c>i18n/default.json</c> file when the project is compiled.</remarks>
+                        [GeneratedCode("TextTemplatingFileGenerator", "1.0.0")]
+                        [SuppressMessage("ReSharper", "InconsistentNaming", Justification = "Deliberately named for consistency and to match translation conventions.")]
+                        {{classModifiers}} class {{className}}
+                        {
+                            /*********
+                            ** Fields
+                            *********/
+                            /// <summary>The mod's translation helper.</summary>
+                            private static ITranslationHelper? Translations;
+
+
+                    """
+                );
 
                 if (addKeyMap)
                 {
-                    output
-                        .AppendLine("        /*********")
-                        .AppendLine("        ** Accessors")
-                        .AppendLine("        *********/")
-                        .AppendLine("        /// <summary>A lookup of available translation keys.</summary>")
-                        .AppendLine(@"        [SuppressMessage(""ReSharper"", ""MemberHidesStaticFromOuterClass"", Justification = ""Using the same key is deliberate."")]")
-                        .AppendLine("        public static class Keys")
-                        .AppendLine("        {");
+                    output.AppendLine(
+                        """
+                                /*********
+                                ** Accessors
+                                *********/
+                                /// <summary>A lookup of available translation keys.</summary>
+                                [SuppressMessage("ReSharper", "MemberHidesStaticFromOuterClass", Justification = "Using the same key is deliberate.")]
+                                public static class Keys
+                                {
+                        """
+                    );
 
                     for (int i = 0; i < entries.Length; i++)
                     {
@@ -86,27 +92,36 @@ namespace Pathoschild.Stardew.ModTranslationClassBuilder
                         if (i != 0)
                             output.AppendLine();
 
-                        output
-                            .AppendLine($@"            /// <summary>The unique key for a translation equivalent to ""{entry.GetTranslationTextForXmlDoc()}"".</summary>")
-                            .AppendLine($@"            public const string {entry.MethodName} = ""{entry.Key}"";");
+                        output.AppendLine(
+                            $$"""
+                                        /// <summary>The unique key for a translation equivalent to "{{entry.GetTranslationTextForXmlDoc()}}".</summary>
+                                        public const string {{entry.MethodName}} = "{{entry.Key}}";
+                              """
+                        );
                     }
 
-                    output
-                        .AppendLine("        }")
-                        .AppendLine()
-                        .AppendLine();
+                    output.AppendLine(
+                        """
+                                }
+
+
+                        """
+                    );
                 }
 
-                output
-                    .AppendLine("        /*********")
-                    .AppendLine("        ** Public methods")
-                    .AppendLine("        *********/")
-                    .AppendLine("        /// <summary>Construct an instance.</summary>")
-                    .AppendLine(@"        /// <param name=""translations"">The mod's translation helper.</param>")
-                    .AppendLine("        public static void Init(ITranslationHelper translations)")
-                    .AppendLine("        {")
-                    .AppendLine($"            {className}.Translations = translations;")
-                    .AppendLine("        }");
+                output.AppendLine(
+                    $$"""
+                            /*********
+                            ** Public methods
+                            *********/
+                            /// <summary>Construct an instance.</summary>
+                            /// <param name="translations">The mod's translation helper.</param>
+                            public static void Init(ITranslationHelper translations)
+                            {
+                                {{className}}.Translations = translations;
+                            }
+                    """
+                );
 
                 foreach (TranslationEntry entry in entries)
                 {
@@ -126,10 +141,14 @@ namespace Pathoschild.Stardew.ModTranslationClassBuilder
                         string renderedTokenObj = entry.Tokens.Any() ? $", {this.GenerateTokenParameter(entry)}" : "";
 
                         output
-                            .AppendLine($@"        public static string {entry.MethodName}({renderedArgs})")
-                            .AppendLine("        {")
-                            .AppendLine($@"            return {className}.GetByKey({renderedKey}{renderedTokenObj});")
-                            .AppendLine("        }");
+                            .AppendLine(
+                                $$"""
+                                        public static string {{entry.MethodName}}({{renderedArgs}})
+                                        {
+                                            return {{className}}.GetByKey({{renderedKey}}{{renderedTokenObj}});
+                                        }
+                                """
+                            );
                     }
                 }
 
@@ -137,29 +156,39 @@ namespace Pathoschild.Stardew.ModTranslationClassBuilder
                     output.AppendLine();
                 else
                 {
-                    output
-                        .AppendLine()
-                        .AppendLine()
-                        .AppendLine("        /*********")
-                        .AppendLine("        ** Private methods")
-                        .AppendLine("        *********/");
+                    output.AppendLine(
+                        $$"""
+
+
+                                /*********
+                                ** Private methods
+                                *********/
+                        """
+                    );
                 }
 
-                output
-                    .AppendLine("        /// <summary>Get a translation by its key.</summary>")
-                    .AppendLine(@"        /// <param name=""key"">The translation key.</param>")
-                    .AppendLine(@"        /// <param name=""tokens"">An object containing token key/value pairs. This can be an anonymous object (like <c>new { value = 42, name = ""Cranberries"" }</c>), a dictionary, or a class instance.</param>")
-                    .AppendLine($"        {(addGetByKey ? "public" : "private")} static Translation GetByKey(string key, object? tokens = null)")
-                    .AppendLine("        {")
-                    .AppendLine($"            if ({className}.Translations == null)")
-                    .AppendLine($@"                throw new InvalidOperationException($""You must call {{nameof({className})}}.{{nameof({className}.Init)}} from the mod's entry method before reading translations."");")
-                    .AppendLine($"            return {className}.Translations.Get(key, tokens);")
-                    .AppendLine("        }");
+                output.AppendLine(
+                    $$"""
+                            /// <summary>Get a translation by its key.</summary>
+                            /// <param name="key">The translation key.</param>
+                            /// <param name="tokens">An object containing token key/value pairs. This can be an anonymous object (like <c>new { value = 42, name = "Cranberries" }</c>), a dictionary, or a class instance.</param>
+                            {{(addGetByKey ? "public" : "private")}} static Translation GetByKey(string key, object? tokens = null)
+                            {
+                                if ({{className}}.Translations == null)
+                                    throw new InvalidOperationException($"You must call {nameof({{className}})}.{nameof({{className}}.Init)} from the mod's entry method before reading translations.");
 
-                output
-                    .AppendLine("    }")
-                    .AppendLine("}")
-                    .AppendLine();
+                                return {{className}}.Translations.Get(key, tokens);
+                            }
+                    """
+                );
+
+                output.AppendLine(
+                    """
+                        }
+                    }
+
+                    """
+                );
 
                 // Add the source code to the compilation
                 context.AddSource($"{className}.generated.cs", output.ToString());
