@@ -197,7 +197,7 @@ namespace Pathoschild.Stardew.ModTranslationClassBuilder
 
                 // read file
                 string json = File.ReadAllText(file.Path);
-                var rawEntries = JsonConvert.DeserializeObject<Dictionary<string, string>>(json);
+                var rawEntries = JsonConvert.DeserializeObject<Dictionary<string, string>>(json) ?? new Dictionary<string, string>();
 
                 // parse entries
                 TranslationEntry[] entries = rawEntries

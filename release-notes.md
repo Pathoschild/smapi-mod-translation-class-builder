@@ -3,6 +3,7 @@
 # Release notes
 ## Upcoming version
 * The `I18n.GetByKey` method and `I18n.Keys` constants are now available by default.
+* Fixed error in rare cases when an `i18n/default.json` file is invalid.
 
 ## 2.0.1
 Released 08 May 2022.
