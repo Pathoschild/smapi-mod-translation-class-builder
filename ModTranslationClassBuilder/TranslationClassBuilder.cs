@@ -189,34 +189,58 @@ namespace Pathoschild.Stardew.ModTranslationClassBuilder
         /// <param name="reservedNames">The names that can't be used for a translation method.</param>
         private TranslationEntry[] ReadTranslationFile(GeneratorExecutionContext context, ISet<string> reservedNames)
         {
+            List<TranslationEntry> entries = new();
+
+            bool hasFolderTranslations = false;
+            if (context.AdditionalFiles.Any(file => Path.GetDirectoryName(Path.GetFullPath(file.Path)).EndsWith(Path.Combine("i18n", "default"), StringComparison.OrdinalIgnoreCase)))
+                hasFolderTranslations = true;
+
+            bool foundAny = false;
             foreach (AdditionalText file in context.AdditionalFiles)
             {
                 // skip if not i18n/default.json
-                if (!Path.GetFullPath(file.Path).EndsWith(Path.Combine("i18n", "default.json"), StringComparison.OrdinalIgnoreCase))
-                    continue;
+                if (hasFolderTranslations)
+                {
+                    if (!Path.GetDirectoryName(Path.GetFullPath(file.Path)).EndsWith(Path.Combine("i18n", "default"), StringComparison.OrdinalIgnoreCase))
+                        continue;
+                }
+                else
+                {
+                    if (!Path.GetFullPath(file.Path).EndsWith(Path.Combine("i18n", "default.json"), StringComparison.OrdinalIgnoreCase))
+                        continue;
+                }
+                foundAny = true;
 
                 // read file
                 string json = File.ReadAllText(file.Path);
                 var rawEntries = JsonConvert.DeserializeObject<Dictionary<string, string>>(json) ?? new Dictionary<string, string>();
 
                 // parse entries
-                TranslationEntry[] entries = rawEntries
+                IEnumerable<TranslationEntry> newEntries = rawEntries
                     .Select(entry => new TranslationEntry(
                         key: entry.Key,
                         methodName: this.FormatMethodName(entry.Key, reservedNames),
                         translationText: entry.Value,
                         tokens: this.GetTokenNames(entry.Value).ToArray()
-                    ))
-                    .ToArray();
-                if (!entries.Any())
-                    this.LogDiagnostic(context, Diagnostics.NoTranslationEntries);
+                    ));
 
-                return entries;
+                entries.AddRange(newEntries);
             }
 
+            if (entries.Any())
+                return entries.ToArray();
+
             // none found
-            this.LogDiagnostic(context, Diagnostics.NoTranslationFile);
-            return Array.Empty<TranslationEntry>();
+            if (!foundAny)
+            {
+                this.LogDiagnostic(context, Diagnostics.NoTranslationFile);
+                return Array.Empty<TranslationEntry>();
+            }
+            else
+            {
+                this.LogDiagnostic(context, Diagnostics.NoTranslationEntries);
+                return Array.Empty<TranslationEntry>();
+            }
         }
 
         /// <summary>Get the token names used in a translation value.</summary>

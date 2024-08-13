@@ -11,6 +11,7 @@
     <!-- make translation file available to source generators -->
     <ItemGroup>
         <AdditionalFiles Include="i18n\default.json" />
+        <AdditionalFiles Include="i18n\default\*.json" />
     </ItemGroup>
 
     <!-- allow loading translation class from file so it can be in source control -->
