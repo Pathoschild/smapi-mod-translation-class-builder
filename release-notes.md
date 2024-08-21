@@ -1,6 +1,13 @@
 ← [README](README.md)
 
 # Release notes
+## 2.2.0
+Released 20 August 2024.
+
+* Added support for the new [i18n subfolders in SMAPI 4.1.0](https://stardewvalleywiki.com/Modding:Modder_Guide/APIs/Translation#i18n_folder) (thanks to spacechase0!).
+* Added more validation to detect invalid i18n files.
+
+
 ## 2.1.0
 Released 29 June 2024.
 

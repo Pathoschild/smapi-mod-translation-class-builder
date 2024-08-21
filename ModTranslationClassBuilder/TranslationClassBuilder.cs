@@ -31,7 +31,7 @@ namespace Pathoschild.Stardew.ModTranslationClassBuilder
                 string classModifiers = this.ReadOption(context, "ClassModifiers", raw => raw) ?? "internal static";
 
                 // get translations
-                TranslationEntry[] entries = this.ReadTranslationFile(context, new HashSet<string>(this.GetReservedNames(className)));
+                TranslationEntry[] entries = this.ReadTranslationFiles(context, new HashSet<string>(this.GetReservedNames(className)));
 
                 // build output
                 StringBuilder output = new();
@@ -166,6 +166,43 @@ namespace Pathoschild.Stardew.ModTranslationClassBuilder
             }
         }
 
+        /// <summary>Get the basic metadata about a translation file.</summary>
+        /// <param name="path">The path to parse.</param>
+        /// <param name="isRootFile">Whether this is a root translation file like <c>i18n/default.json</c> (true) or a translation subfolder file like <c>i18n/default/any-file.json</c> (false).</param>
+        /// <param name="isDefaultLocale">Whether this file is for the default locale.</param>
+        public bool TryParseTranslationFilePath(string path, out bool isRootFile, out bool isDefaultLocale)
+        {
+            string fullPath = Path.GetFullPath(path);
+            string? parentDirPath = Path.GetDirectoryName(fullPath);
+            string? parentName = Path.GetFileName(parentDirPath);
+
+            if (parentName != null && Path.GetExtension(fullPath).Equals(".json", StringComparison.OrdinalIgnoreCase))
+            {
+                // root file
+                if (parentName.Equals("i18n", StringComparison.OrdinalIgnoreCase))
+                {
+                    isRootFile = true;
+                    isDefaultLocale = Path.GetFileName(fullPath).Equals("default.json", StringComparison.OrdinalIgnoreCase);
+                    return true;
+                }
+
+                // subfolder
+                string? grandparentDirPath = Path.GetDirectoryName(parentDirPath);
+                string? grandparentName = Path.GetFileName(grandparentDirPath);
+                if (grandparentName?.Equals("i18n", StringComparison.OrdinalIgnoreCase) is true)
+                {
+                    isRootFile = false;
+                    isDefaultLocale = parentName.Equals("default", StringComparison.OrdinalIgnoreCase);
+                    return true;
+                }
+            }
+
+            // invalid
+            isRootFile = false;
+            isDefaultLocale = false;
+            return false;
+        }
+
 
         /*********
         ** Private methods
@@ -187,35 +224,55 @@ namespace Pathoschild.Stardew.ModTranslationClassBuilder
         /// <summary>Read the translation entries from the context.</summary>
         /// <param name="context">The source generator execution context.</param>
         /// <param name="reservedNames">The names that can't be used for a translation method.</param>
-        private TranslationEntry[] ReadTranslationFile(GeneratorExecutionContext context, ISet<string> reservedNames)
+        private TranslationEntry[] ReadTranslationFiles(GeneratorExecutionContext context, ISet<string> reservedNames)
         {
+            List<TranslationEntry> entries = new();
+
+            bool foundRootFile = false;
+            bool foundSubfolder = false;
             foreach (AdditionalText file in context.AdditionalFiles)
             {
-                // skip if not i18n/default.json
-                if (!Path.GetFullPath(file.Path).EndsWith(Path.Combine("i18n", "default.json"), StringComparison.OrdinalIgnoreCase))
-                    continue;
+                // parse path
+                if (!this.TryParseTranslationFilePath(file.Path, out bool isRootFile, out bool isDefaultLocale))
+                {
+                    this.LogDiagnostic(context, Diagnostics.InvalidTranslationNestedFiles, file.Path);
+                    return Array.Empty<TranslationEntry>();
+                }
+                if (isRootFile)
+                    foundRootFile = true;
+                else
+                    foundSubfolder = true;
+
+                // can't have both types
+                if (foundRootFile && foundSubfolder)
+                {
+                    this.LogDiagnostic(context, Diagnostics.BothTranslationFilesAndSubfolders);
+                    return Array.Empty<TranslationEntry>();
+                }
 
                 // read file
-                string json = File.ReadAllText(file.Path);
-                var rawEntries = JsonConvert.DeserializeObject<Dictionary<string, string>>(json) ?? new Dictionary<string, string>();
+                if (isDefaultLocale)
+                {
+                    string json = File.ReadAllText(file.Path);
+                    var rawEntries = JsonConvert.DeserializeObject<Dictionary<string, string>>(json) ?? new Dictionary<string, string>();
 
-                // parse entries
-                TranslationEntry[] entries = rawEntries
-                    .Select(entry => new TranslationEntry(
-                        key: entry.Key,
-                        methodName: this.FormatMethodName(entry.Key, reservedNames),
-                        translationText: entry.Value,
-                        tokens: this.GetTokenNames(entry.Value).ToArray()
-                    ))
-                    .ToArray();
-                if (!entries.Any())
-                    this.LogDiagnostic(context, Diagnostics.NoTranslationEntries);
+                    IEnumerable<TranslationEntry> newEntries = rawEntries
+                        .Select(entry => new TranslationEntry(
+                            key: entry.Key,
+                            methodName: this.FormatMethodName(entry.Key, reservedNames),
+                            translationText: entry.Value,
+                            tokens: this.GetTokenNames(entry.Value).ToArray()
+                        ));
 
-                return entries;
+                    entries.AddRange(newEntries);
+                }
             }
 
+            if (entries.Any())
+                return entries.ToArray();
+
             // none found
-            this.LogDiagnostic(context, Diagnostics.NoTranslationFile);
+            this.LogDiagnostic(context, foundSubfolder || foundRootFile ? Diagnostics.NoTranslationEntries : Diagnostics.NoTranslationFile);
             return Array.Empty<TranslationEntry>();
         }
 
