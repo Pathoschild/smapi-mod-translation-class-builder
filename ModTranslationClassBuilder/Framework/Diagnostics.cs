@@ -51,5 +51,27 @@ namespace Pathoschild.Stardew.ModTranslationClassBuilder.Framework
             defaultSeverity: DiagnosticSeverity.Error,
             isEnabledByDefault: true
         );
+
+        /// <summary>A diagnostic message logged when the project has both root translation files (like <c>i18n/default.json</c>) and subfolders (like <c>i18n/default/any-file.json</c>).</summary>
+        /// <remarks>This diagnostic has no format parameters.</remarks>
+        public static readonly DiagnosticDescriptor BothTranslationFilesAndSubfolders = new DiagnosticDescriptor(
+            id: "TCB0005",
+            title: "Cannot have both root translation files (like `i18n/default.json`) and subfolders (like `i18n/default/any-file.json`)",
+            messageFormat: "Cannot have both root translation files (like `i18n/default.json`) and subfolders (like `i18n/default/any-file.json`)",
+            category: "TranslationClassBuilder",
+            defaultSeverity: DiagnosticSeverity.Error,
+            isEnabledByDefault: true
+        );
+
+        /// <summary>A diagnostic message logged when the project has invalid nested files in a translation folder.</summary>
+        /// <remarks>This diagnostic has no format parameters.</remarks>
+        public static readonly DiagnosticDescriptor InvalidTranslationNestedFiles = new DiagnosticDescriptor(
+            id: "TCB0006",
+            title: "Invalid files found in i18n folder",
+            messageFormat: "Found invalid file '{0}' in i18n folder",
+            category: "TranslationClassBuilder",
+            defaultSeverity: DiagnosticSeverity.Error,
+            isEnabledByDefault: true
+        );
     }
 }
