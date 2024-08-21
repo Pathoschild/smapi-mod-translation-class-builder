@@ -64,7 +64,7 @@ namespace Pathoschild.Stardew.ModTranslationClassBuilder.Framework
         );
 
         /// <summary>A diagnostic message logged when the project has invalid nested files in a translation folder.</summary>
-        /// <remarks>This diagnostic has no format parameters.</remarks>
+        /// <remarks>This diagnostic has one format parameter: the invalid file's path.</remarks>
         public static readonly DiagnosticDescriptor InvalidTranslationNestedFiles = new DiagnosticDescriptor(
             id: "TCB0006",
             title: "Invalid files found in i18n folder",
